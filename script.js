@@ -365,6 +365,11 @@ class JSONFormatter {
         
         if (typeof data === 'object' && data !== null) {
             const isArray = Array.isArray(data);
+            
+            // 创建节点头部容器
+            const header = document.createElement('div');
+            header.className = 'json-node-header';
+            
             const toggle = document.createElement('span');
             toggle.className = 'json-toggle expanded';
             toggle.onclick = (e) => {
@@ -380,6 +385,11 @@ class JSONFormatter {
             bracket.className = 'json-punctuation';
             bracket.textContent = isArray ? '[' : '{';
             
+            // 添加路径显示
+            const pathSpan = document.createElement('span');
+            pathSpan.className = 'json-path';
+            pathSpan.textContent = this.formatPath(path);
+            
             const copyBtn = document.createElement('button');
             copyBtn.className = 'json-copy-btn';
             copyBtn.textContent = '复制';
@@ -388,22 +398,26 @@ class JSONFormatter {
                 this.copyNodeValue(data, path);
             };
             
-            node.appendChild(toggle);
-            node.appendChild(keySpan);
-            node.appendChild(bracket);
-            node.appendChild(copyBtn);
+            header.appendChild(toggle);
+            header.appendChild(keySpan);
+            header.appendChild(bracket);
+            header.appendChild(pathSpan);
+            header.appendChild(copyBtn);
+            node.appendChild(header);
             
             const children = document.createElement('div');
             children.className = 'json-children';
             
             if (isArray) {
                 data.forEach((item, index) => {
-                    const childNode = this.createJSONNode(item, index.toString());
+                    const childPath = path ? `${path}[${index}]` : `[${index}]`;
+                    const childNode = this.createJSONNode(item, childPath);
                     children.appendChild(childNode);
                 });
             } else {
                 Object.keys(data).forEach(key => {
-                    const childNode = this.createJSONNode(data[key], key);
+                    const childPath = path ? `${path}.${key}` : key;
+                    const childNode = this.createJSONNode(data[key], childPath);
                     children.appendChild(childNode);
                 });
             }
@@ -416,6 +430,10 @@ class JSONFormatter {
             node.appendChild(closeBracket);
             
         } else {
+            // 创建节点头部容器
+            const header = document.createElement('div');
+            header.className = 'json-node-header';
+            
             const keySpan = document.createElement('span');
             keySpan.className = 'json-key';
             keySpan.textContent = path ? `"${path}": ` : '';
@@ -435,6 +453,11 @@ class JSONFormatter {
                 valueSpan.textContent = 'null';
             }
             
+            // 添加路径显示
+            const pathSpan = document.createElement('span');
+            pathSpan.className = 'json-path';
+            pathSpan.textContent = this.formatPath(path);
+            
             const copyBtn = document.createElement('button');
             copyBtn.className = 'json-copy-btn';
             copyBtn.textContent = '复制';
@@ -443,9 +466,11 @@ class JSONFormatter {
                 this.copyNodeValue(data, path);
             };
             
-            node.appendChild(keySpan);
-            node.appendChild(valueSpan);
-            node.appendChild(copyBtn);
+            header.appendChild(keySpan);
+            header.appendChild(valueSpan);
+            header.appendChild(pathSpan);
+            header.appendChild(copyBtn);
+            node.appendChild(header);
         }
         
         return node;
@@ -487,6 +512,27 @@ class JSONFormatter {
             document.body.removeChild(tempInput);
             this.showNotification('节点值已复制到剪贴板', 'success');
         }
+    }
+
+    // 格式化路径显示
+    formatPath(path) {
+        if (!path) return 'root';
+        
+        // 处理数组索引路径，保持简洁
+        if (path.includes('[')) {
+            // 将连续的数组索引合并，如 [0][1][2] 显示为 [0,1,2]
+            return path.replace(/\[(\d+)\]/g, (match, num) => {
+                // 检查前面是否已经有数组索引
+                const prevMatch = path.substring(0, path.indexOf(match));
+                if (prevMatch.endsWith(']')) {
+                    return `,${num}`;
+                }
+                return `[${num}`;
+            }).replace(/\[(\d+),/g, '[$1,').replace(/,\]/g, ']');
+        }
+        
+        // 处理对象属性路径
+        return path;
     }
 }
 

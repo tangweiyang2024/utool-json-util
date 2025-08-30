@@ -424,6 +424,32 @@ body {
     font-weight: 500;
 }
 
+.json-path {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 6px;
+    font-size: 11px;
+    background: #f8f9fa;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    opacity: 0.8;
+}
+
+.json-node:hover .json-path {
+    opacity: 1;
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.json-node-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
 @media (max-width: 768px) {
     .main {
         flex-direction: column;
