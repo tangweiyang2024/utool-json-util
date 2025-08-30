@@ -5,7 +5,6 @@ class JSONFormatter {
         this.bindEvents();
         this.initResizer();
         this.updateLineNumbers();
-        this.updateStatus('就绪');
     }
 
     // 初始化DOM元素
@@ -20,7 +19,6 @@ class JSONFormatter {
         this.escapeBtn = document.getElementById('escapeBtn');
         this.clearBtn = document.getElementById('clearBtn');
         this.copyBtn = document.getElementById('copyBtn');
-        this.status = document.getElementById('status');
         this.resizer = document.getElementById('resizer');
     }
 
@@ -42,7 +40,10 @@ class JSONFormatter {
             if (!isResizing) return;
             
             const deltaX = e.clientX - startX;
-            const newWidth = Math.max(300, Math.min(startWidth + deltaX, window.innerWidth - 600));
+            const containerWidth = window.innerWidth - 80; // 减去padding和margin
+            const minWidth = containerWidth * 0.3; // 最小宽度为容器的30%
+            const maxWidth = containerWidth * 0.7; // 最大宽度为容器的70%
+            const newWidth = Math.max(minWidth, Math.min(startWidth + deltaX, maxWidth));
             
             this.inputArea.parentElement.parentElement.style.flex = `0 0 ${newWidth}px`;
             this.outputArea.parentElement.parentElement.style.flex = `1 1 auto`;
@@ -88,7 +89,6 @@ class JSONFormatter {
         // 输入框变化时自动更新行号
         this.inputArea.addEventListener('input', () => {
             this.updateInputLineNumbers();
-            this.updateStatus('输入中...');
         });
 
         // 同步滚动
@@ -99,19 +99,6 @@ class JSONFormatter {
         this.outputArea.addEventListener('scroll', () => {
             this.outputLineNumbers.scrollTop = this.outputArea.scrollTop;
         });
-    }
-
-    // 更新状态显示
-    updateStatus(message) {
-        if (this.status) {
-            this.status.textContent = message;
-            this.status.style.background = message === '就绪' ? '#e9ecef' : 
-                                         message === '成功' ? '#d4edda' : 
-                                         message === '错误' ? '#f8d7da' : '#fff3cd';
-            this.status.style.color = message === '就绪' ? '#495057' : 
-                                     message === '成功' ? '#155724' : 
-                                     message === '错误' ? '#721c24' : '#856404';
-        }
     }
 
     // 显示通知
@@ -146,7 +133,6 @@ class JSONFormatter {
             const input = this.inputArea.textContent.trim();
             if (!input) {
                 this.showNotification('请输入JSON数据', 'error');
-                this.updateStatus('错误');
                 return;
             }
 
@@ -163,13 +149,11 @@ class JSONFormatter {
             const formatted = JSON.stringify(parsed, null, 2);
             this.outputArea.textContent = formatted;
             this.updateOutputLineNumbers();
-            this.updateStatus('成功');
             this.showNotification('JSON格式化成功', 'success');
             
         } catch (error) {
             this.outputArea.textContent = `格式化失败: ${error.message}`;
             this.updateOutputLineNumbers();
-            this.updateStatus('错误');
             this.showNotification('JSON格式化失败', 'error');
         }
     }
@@ -180,7 +164,6 @@ class JSONFormatter {
             const input = this.inputArea.textContent.trim();
             if (!input) {
                 this.showNotification('请输入JSON数据', 'error');
-                this.updateStatus('错误');
                 return;
             }
 
@@ -194,13 +177,11 @@ class JSONFormatter {
             const compressed = JSON.stringify(parsed);
             this.outputArea.textContent = compressed;
             this.updateOutputLineNumbers();
-            this.updateStatus('成功');
             this.showNotification('JSON压缩成功', 'success');
             
         } catch (error) {
             this.outputArea.textContent = `压缩失败: ${error.message}`;
             this.updateOutputLineNumbers();
-            this.updateStatus('错误');
             this.showNotification('JSON压缩失败', 'error');
         }
     }
@@ -211,7 +192,6 @@ class JSONFormatter {
             const input = this.inputArea.textContent.trim();
             if (!input) {
                 this.showNotification('请输入JSON数据', 'error');
-                this.updateStatus('错误');
                 return;
             }
 
@@ -233,13 +213,11 @@ class JSONFormatter {
 
             this.outputArea.textContent = unescaped;
             this.updateOutputLineNumbers();
-            this.updateStatus('成功');
             this.showNotification('转义去除成功', 'success');
             
         } catch (error) {
             this.outputArea.textContent = `处理失败: ${error.message}`;
             this.updateOutputLineNumbers();
-            this.updateStatus('错误');
             this.showNotification('转义去除失败', 'error');
         }
     }
@@ -250,7 +228,6 @@ class JSONFormatter {
             const input = this.inputArea.textContent.trim();
             if (!input) {
                 this.showNotification('请输入JSON数据', 'error');
-                this.updateStatus('错误');
                 return;
             }
 
@@ -264,13 +241,11 @@ class JSONFormatter {
 
             this.outputArea.textContent = escaped;
             this.updateOutputLineNumbers();
-            this.updateStatus('成功');
             this.showNotification('转义添加成功', 'success');
             
         } catch (error) {
             this.outputArea.textContent = `处理失败: ${error.message}`;
             this.updateOutputLineNumbers();
-            this.updateStatus('错误');
             this.showNotification('转义添加失败', 'error');
         }
     }
@@ -304,7 +279,6 @@ class JSONFormatter {
         this.inputArea.textContent = '';
         this.outputArea.textContent = '';
         this.updateLineNumbers();
-        this.updateStatus('已清空');
         this.showNotification('内容已清空', 'success');
     }
 
@@ -326,10 +300,8 @@ class JSONFormatter {
                 this.updateInputLineNumbers();
                 this.showNotification('内容已复制到剪贴板', 'success');
             }
-            this.updateStatus('已复制');
         } catch (error) {
             this.showNotification('复制失败', 'error');
-            this.updateStatus('复制失败');
         }
     }
 

@@ -87,8 +87,9 @@ body {
     border-radius: 16px 0 0 16px;
     padding: 20px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    flex: 1;
-    min-width: 300px;
+    flex: 0 0 50%;
+    min-width: 0;
+    max-width: 50%;
 }
 
 .output-section {
@@ -97,8 +98,9 @@ body {
     border-radius: 0 16px 16px 0;
     padding: 20px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    flex: 1;
-    min-width: 300px;
+    flex: 0 0 50%;
+    min-width: 0;
+    max-width: 50%;
 }
 
 .resizer {
@@ -125,10 +127,11 @@ body {
 .code-container {
     position: relative;
     display: flex;
-    height: 400px;
+    height: 600px;
     border: 2px solid #e9ecef;
     border-radius: 12px;
     overflow: hidden;
+    width: 100%;
 }
 
 .line-numbers {
@@ -141,8 +144,10 @@ body {
     text-align: right;
     border-right: 1px solid #e9ecef;
     min-width: 40px;
+    max-width: 40px;
     user-select: none;
     overflow-y: auto;
+    flex-shrink: 0;
 }
 
 .line-number {
@@ -165,9 +170,12 @@ body {
     outline: none;
     resize: none;
     overflow-y: auto;
+    overflow-x: auto;
     white-space: pre-wrap;
     word-wrap: break-word;
     background: transparent;
+    min-width: 0;
+    width: 100%;
 }
 
 .code-input:focus {
@@ -183,25 +191,6 @@ body {
     content: attr(placeholder);
     color: #adb5bd;
     pointer-events: none;
-}
-
-.footer {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: center;
-}
-
-.status {
-    padding: 8px 16px;
-    background: #e9ecef;
-    border-radius: 20px;
-    font-size: 14px;
-    color: #495057;
-    font-weight: 500;
 }
 
 /* 滚动条样式 */
