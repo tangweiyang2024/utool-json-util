@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSON格式化工具</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
 </head>
 <body>
     <div class="container">
         <header class="header">
-            <h1>JSON格式化工具</h1>
             <div class="toolbar">
                 <button id="formatBtn" class="btn btn-primary">格式化</button>
                 <button id="compressBtn" class="btn btn-secondary">压缩</button>
@@ -22,28 +22,29 @@
         
         <main class="main">
             <div class="input-section">
-                <label for="inputArea">输入JSON:</label>
-                <textarea id="inputArea" placeholder="请输入要格式化的JSON数据..."></textarea>
+                <div class="code-container">
+                    <div class="line-numbers" id="inputLineNumbers"></div>
+                    <pre class="code-input" id="inputArea" contenteditable="true" placeholder="请输入要格式化的JSON数据..."></pre>
+                </div>
             </div>
             
+            <div class="resizer" id="resizer"></div>
+            
             <div class="output-section">
-                <label for="outputArea">输出结果:</label>
-                <textarea id="outputArea" readonly placeholder="格式化后的结果将显示在这里..."></textarea>
+                <div class="code-container">
+                    <div class="line-numbers" id="outputLineNumbers"></div>
+                    <pre class="code-output" id="outputArea" contenteditable="false" placeholder="格式化后的结果将显示在这里..."></pre>
+                </div>
             </div>
         </main>
         
         <footer class="footer">
             <div class="status" id="status">就绪</div>
-            <div class="info">
-                <span>支持非标准JSON格式化</span>
-                <span>•</span>
-                <span>转义处理</span>
-                <span>•</span>
-                <span>压缩美化</span>
-            </div>
         </footer>
     </div>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

@@ -3,6 +3,8 @@ class JSONFormatter {
     constructor() {
         this.initElements();
         this.bindEvents();
+        this.initResizer();
+        this.updateLineNumbers();
         this.updateStatus('就绪');
     }
 
@@ -10,6 +12,8 @@ class JSONFormatter {
     initElements() {
         this.inputArea = document.getElementById('inputArea');
         this.outputArea = document.getElementById('outputArea');
+        this.inputLineNumbers = document.getElementById('inputLineNumbers');
+        this.outputLineNumbers = document.getElementById('outputLineNumbers');
         this.formatBtn = document.getElementById('formatBtn');
         this.compressBtn = document.getElementById('compressBtn');
         this.unescapeBtn = document.getElementById('unescapeBtn');
@@ -17,6 +21,59 @@ class JSONFormatter {
         this.clearBtn = document.getElementById('clearBtn');
         this.copyBtn = document.getElementById('copyBtn');
         this.status = document.getElementById('status');
+        this.resizer = document.getElementById('resizer');
+    }
+
+    // 初始化拖拽调整器
+    initResizer() {
+        let isResizing = false;
+        let startX;
+        let startWidth;
+
+        this.resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            startX = e.clientX;
+            startWidth = this.inputArea.parentElement.parentElement.offsetWidth;
+            document.body.style.cursor = 'col-resize';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            
+            const deltaX = e.clientX - startX;
+            const newWidth = Math.max(300, Math.min(startWidth + deltaX, window.innerWidth - 600));
+            
+            this.inputArea.parentElement.parentElement.style.flex = `0 0 ${newWidth}px`;
+            this.outputArea.parentElement.parentElement.style.flex = `1 1 auto`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            isResizing = false;
+            document.body.style.cursor = '';
+        });
+    }
+
+    // 更新行号
+    updateLineNumbers() {
+        this.updateInputLineNumbers();
+        this.updateOutputLineNumbers();
+    }
+
+    // 更新输入区域行号
+    updateInputLineNumbers() {
+        const lines = this.inputArea.textContent.split('\n');
+        this.inputLineNumbers.innerHTML = lines.map((_, index) => 
+            `<div class="line-number">${index + 1}</div>`
+        ).join('');
+    }
+
+    // 更新输出区域行号
+    updateOutputLineNumbers() {
+        const lines = this.outputArea.textContent.split('\n');
+        this.outputLineNumbers.innerHTML = lines.map((_, index) => 
+            `<div class="line-number">${index + 1}</div>`
+        ).join('');
     }
 
     // 绑定事件
@@ -28,21 +85,33 @@ class JSONFormatter {
         this.clearBtn.addEventListener('click', () => this.clearAll());
         this.copyBtn.addEventListener('click', () => this.copyOutput());
         
-        // 输入框变化时自动格式化（可选）
+        // 输入框变化时自动更新行号
         this.inputArea.addEventListener('input', () => {
+            this.updateInputLineNumbers();
             this.updateStatus('输入中...');
+        });
+
+        // 同步滚动
+        this.inputArea.addEventListener('scroll', () => {
+            this.inputLineNumbers.scrollTop = this.inputArea.scrollTop;
+        });
+
+        this.outputArea.addEventListener('scroll', () => {
+            this.outputLineNumbers.scrollTop = this.outputArea.scrollTop;
         });
     }
 
     // 更新状态显示
     updateStatus(message) {
-        this.status.textContent = message;
-        this.status.style.background = message === '就绪' ? '#e9ecef' : 
-                                     message === '成功' ? '#d4edda' : 
-                                     message === '错误' ? '#f8d7da' : '#fff3cd';
-        this.status.style.color = message === '就绪' ? '#495057' : 
-                                 message === '成功' ? '#155724' : 
-                                 message === '错误' ? '#721c24' : '#856404';
+        if (this.status) {
+            this.status.textContent = message;
+            this.status.style.background = message === '就绪' ? '#e9ecef' : 
+                                         message === '成功' ? '#d4edda' : 
+                                         message === '错误' ? '#f8d7da' : '#fff3cd';
+            this.status.style.color = message === '就绪' ? '#495057' : 
+                                     message === '成功' ? '#155724' : 
+                                     message === '错误' ? '#721c24' : '#856404';
+        }
     }
 
     // 显示通知
@@ -74,7 +143,7 @@ class JSONFormatter {
     // 格式化JSON
     formatJSON() {
         try {
-            const input = this.inputArea.value.trim();
+            const input = this.inputArea.textContent.trim();
             if (!input) {
                 this.showNotification('请输入JSON数据', 'error');
                 this.updateStatus('错误');
@@ -92,12 +161,14 @@ class JSONFormatter {
 
             // 格式化输出
             const formatted = JSON.stringify(parsed, null, 2);
-            this.outputArea.value = formatted;
+            this.outputArea.textContent = formatted;
+            this.updateOutputLineNumbers();
             this.updateStatus('成功');
             this.showNotification('JSON格式化成功', 'success');
             
         } catch (error) {
-            this.outputArea.value = `格式化失败: ${error.message}`;
+            this.outputArea.textContent = `格式化失败: ${error.message}`;
+            this.updateOutputLineNumbers();
             this.updateStatus('错误');
             this.showNotification('JSON格式化失败', 'error');
         }
@@ -106,7 +177,7 @@ class JSONFormatter {
     // 压缩JSON
     compressJSON() {
         try {
-            const input = this.inputArea.value.trim();
+            const input = this.inputArea.textContent.trim();
             if (!input) {
                 this.showNotification('请输入JSON数据', 'error');
                 this.updateStatus('错误');
@@ -121,12 +192,14 @@ class JSONFormatter {
             }
 
             const compressed = JSON.stringify(parsed);
-            this.outputArea.value = compressed;
+            this.outputArea.textContent = compressed;
+            this.updateOutputLineNumbers();
             this.updateStatus('成功');
             this.showNotification('JSON压缩成功', 'success');
             
         } catch (error) {
-            this.outputArea.value = `压缩失败: ${error.message}`;
+            this.outputArea.textContent = `压缩失败: ${error.message}`;
+            this.updateOutputLineNumbers();
             this.updateStatus('错误');
             this.showNotification('JSON压缩失败', 'error');
         }
@@ -135,7 +208,7 @@ class JSONFormatter {
     // 去除转义
     unescapeJSON() {
         try {
-            const input = this.inputArea.value.trim();
+            const input = this.inputArea.textContent.trim();
             if (!input) {
                 this.showNotification('请输入JSON数据', 'error');
                 this.updateStatus('错误');
@@ -158,12 +231,14 @@ class JSONFormatter {
                 // 如果解析失败，保持原样
             }
 
-            this.outputArea.value = unescaped;
+            this.outputArea.textContent = unescaped;
+            this.updateOutputLineNumbers();
             this.updateStatus('成功');
             this.showNotification('转义去除成功', 'success');
             
         } catch (error) {
-            this.outputArea.value = `处理失败: ${error.message}`;
+            this.outputArea.textContent = `处理失败: ${error.message}`;
+            this.updateOutputLineNumbers();
             this.updateStatus('错误');
             this.showNotification('转义去除失败', 'error');
         }
@@ -172,7 +247,7 @@ class JSONFormatter {
     // 添加转义
     escapeJSON() {
         try {
-            const input = this.inputArea.value.trim();
+            const input = this.inputArea.textContent.trim();
             if (!input) {
                 this.showNotification('请输入JSON数据', 'error');
                 this.updateStatus('错误');
@@ -187,12 +262,14 @@ class JSONFormatter {
                 .replace(/\t/g, '\\t')
                 .replace(/\r/g, '\\r');
 
-            this.outputArea.value = escaped;
+            this.outputArea.textContent = escaped;
+            this.updateOutputLineNumbers();
             this.updateStatus('成功');
             this.showNotification('转义添加成功', 'success');
             
         } catch (error) {
-            this.outputArea.value = `处理失败: ${error.message}`;
+            this.outputArea.textContent = `处理失败: ${error.message}`;
+            this.updateOutputLineNumbers();
             this.updateStatus('错误');
             this.showNotification('转义添加失败', 'error');
         }
@@ -224,15 +301,16 @@ class JSONFormatter {
 
     // 清空所有内容
     clearAll() {
-        this.inputArea.value = '';
-        this.outputArea.value = '';
+        this.inputArea.textContent = '';
+        this.outputArea.textContent = '';
+        this.updateLineNumbers();
         this.updateStatus('已清空');
         this.showNotification('内容已清空', 'success');
     }
 
     // 复制输出内容
     async copyOutput() {
-        const output = this.outputArea.value;
+        const output = this.outputArea.textContent;
         if (!output) {
             this.showNotification('没有内容可复制', 'error');
             return;
@@ -244,9 +322,8 @@ class JSONFormatter {
                 this.showNotification('内容已复制到剪贴板', 'success');
             } else {
                 // 降级方案
-                this.inputArea.value = output;
-                this.inputArea.select();
-                document.execCommand('copy');
+                this.inputArea.textContent = output;
+                this.updateInputLineNumbers();
                 this.showNotification('内容已复制到剪贴板', 'success');
             }
             this.updateStatus('已复制');
