@@ -147,12 +147,12 @@ class JSONFormatter {
 
             // 格式化输出
             const formatted = JSON.stringify(parsed, null, 2);
-            this.outputArea.textContent = formatted;
+            this.outputArea.innerHTML = this.highlightJSON(formatted);
             this.updateOutputLineNumbers();
             this.showNotification('JSON格式化成功', 'success');
             
         } catch (error) {
-            this.outputArea.textContent = `格式化失败: ${error.message}`;
+            this.outputArea.innerHTML = `<span class="error">格式化失败: ${error.message}</span>`;
             this.updateOutputLineNumbers();
             this.showNotification('JSON格式化失败', 'error');
         }
@@ -175,12 +175,12 @@ class JSONFormatter {
             }
 
             const compressed = JSON.stringify(parsed);
-            this.outputArea.textContent = compressed;
+            this.outputArea.innerHTML = this.highlightJSON(compressed);
             this.updateOutputLineNumbers();
             this.showNotification('JSON压缩成功', 'success');
             
         } catch (error) {
-            this.outputArea.textContent = `压缩失败: ${error.message}`;
+            this.outputArea.innerHTML = `<span class="error">压缩失败: ${error.message}</span>`;
             this.updateOutputLineNumbers();
             this.showNotification('JSON压缩失败', 'error');
         }
@@ -211,12 +211,12 @@ class JSONFormatter {
                 // 如果解析失败，保持原样
             }
 
-            this.outputArea.textContent = unescaped;
+            this.outputArea.innerHTML = this.highlightJSON(unescaped);
             this.updateOutputLineNumbers();
             this.showNotification('转义去除成功', 'success');
             
         } catch (error) {
-            this.outputArea.textContent = `处理失败: ${error.message}`;
+            this.outputArea.innerHTML = `<span class="error">处理失败: ${error.message}</span>`;
             this.updateOutputLineNumbers();
             this.showNotification('转义去除失败', 'error');
         }
@@ -239,12 +239,13 @@ class JSONFormatter {
                 .replace(/\t/g, '\\t')
                 .replace(/\r/g, '\\r');
 
-            this.outputArea.textContent = escaped;
+            this.outputArea.innerHTML = this.highlightJSON(escaped);
             this.updateOutputLineNumbers();
             this.showNotification('转义添加成功', 'success');
             
         } catch (error) {
-            this.outputArea.textContent = `处理失败: ${error.message}`;
+            this.outputArea.innerHTML = `<span class="error">处理失败: ${error.message}</span>`;
+            this.updateOutputLineNumbers();
             this.updateOutputLineNumbers();
             this.showNotification('转义添加失败', 'error');
         }
@@ -277,14 +278,14 @@ class JSONFormatter {
     // 清空所有内容
     clearAll() {
         this.inputArea.textContent = '';
-        this.outputArea.textContent = '';
+        this.outputArea.innerHTML = '';
         this.updateLineNumbers();
         this.showNotification('内容已清空', 'success');
     }
 
     // 复制输出内容
     async copyOutput() {
-        const output = this.outputArea.textContent;
+        const output = this.outputArea.textContent || this.outputArea.innerText;
         if (!output) {
             this.showNotification('没有内容可复制', 'error');
             return;
@@ -303,6 +304,21 @@ class JSONFormatter {
         } catch (error) {
             this.showNotification('复制失败', 'error');
         }
+    }
+
+    // JSON语法高亮
+    highlightJSON(jsonString) {
+        return jsonString
+            // 字符串高亮
+            .replace(/"([^"]*)"/g, '<span class="json-string">"$1"</span>')
+            // 数字高亮
+            .replace(/\b(-?\d+\.?\d*)\b/g, '<span class="json-number">$1</span>')
+            // 布尔值高亮
+            .replace(/\b(true|false)\b/g, '<span class="json-boolean">$1</span>')
+            // null值高亮
+            .replace(/\b(null)\b/g, '<span class="json-null">$1</span>')
+            // 标点符号高亮
+            .replace(/([{}[\],:])/g, '<span class="json-punctuation">$1</span>');
     }
 
     // 验证JSON格式

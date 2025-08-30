@@ -229,6 +229,37 @@ body {
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
+/* JSON语法高亮样式 */
+.json-string {
+    color: #22863a;
+    font-weight: 500;
+}
+
+.json-number {
+    color: #005cc5;
+    font-weight: 500;
+}
+
+.json-boolean {
+    color: #005cc5;
+    font-weight: 600;
+}
+
+.json-null {
+    color: #005cc5;
+    font-weight: 600;
+}
+
+.json-punctuation {
+    color: #24292e;
+    font-weight: 600;
+}
+
+.error {
+    color: #dc3545;
+    font-weight: 500;
+}
+
 @media (max-width: 768px) {
     .main {
         flex-direction: column;
