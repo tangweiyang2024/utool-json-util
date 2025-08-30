@@ -6,6 +6,23 @@ class JSONFormatter {
         this.initResizer();
         this.updateLineNumbers();
         this.initLayout();
+        this.initUToolsListener(); // 初始化uTools消息监听器
+    }
+
+    // 初始化uTools消息监听器
+    initUToolsListener() {
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'setInput') {
+                // 设置输入框内容
+                this.inputArea.value = event.data.data;
+                this.updateInputLineNumbers();
+                
+                // 自动格式化
+                setTimeout(() => {
+                    this.formatJSON();
+                }, 100);
+            }
+        });
     }
 
     // 初始化DOM元素

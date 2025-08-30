@@ -1,5 +1,5 @@
 {
-  "main": "index.html",
+  "main": "http://localhost:8000",
   "logo": "logo.png",
   "preload": "preload.js",
   "features": [
@@ -49,9 +49,6 @@
       ]
     }
   ],
-  "development": {
-    "main": "http://localhost:8000"
-  },
   "pluginSetting": {
     "single": true
   },
