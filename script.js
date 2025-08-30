@@ -5,6 +5,7 @@ class JSONFormatter {
         this.bindEvents();
         this.initResizer();
         this.updateLineNumbers();
+        this.initLayout();
     }
 
     // 初始化DOM元素
@@ -20,6 +21,19 @@ class JSONFormatter {
         this.clearBtn = document.getElementById('clearBtn');
         this.copyBtn = document.getElementById('copyBtn');
         this.resizer = document.getElementById('resizer');
+    }
+
+    // 初始化布局
+    initLayout() {
+        const containerWidth = window.innerWidth - 40;
+        const inputWidth = containerWidth * 0.5;
+        const outputWidth = containerWidth * 0.5 - 4;
+        
+        this.inputArea.parentElement.parentElement.style.flex = `0 0 ${inputWidth}px`;
+        this.inputArea.parentElement.parentElement.style.width = `${inputWidth}px`;
+        
+        this.outputArea.parentElement.parentElement.style.flex = `0 0 ${outputWidth}px`;
+        this.outputArea.parentElement.parentElement.style.width = `${outputWidth}px`;
     }
 
     // 初始化拖拽调整器
@@ -98,6 +112,11 @@ class JSONFormatter {
 
         this.outputArea.addEventListener('scroll', () => {
             this.outputLineNumbers.scrollTop = this.outputArea.scrollTop;
+        });
+
+        // 窗口大小变化时重新调整布局
+        window.addEventListener('resize', () => {
+            this.initLayout();
         });
     }
 
