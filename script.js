@@ -85,9 +85,11 @@ class JSONFormatter {
 
     // 更新输出区域行号
     updateOutputLineNumbers() {
-        const lines = this.outputArea.textContent.split('\n');
-        this.outputLineNumbers.innerHTML = lines.map((_, index) => 
-            `<div class="line-number">${index + 1}</div>`
+        // 对于树形结构，计算实际显示的行数
+        const jsonNodes = this.outputArea.querySelectorAll('.json-node');
+        const lines = Array.from(jsonNodes).map((_, index) => index + 1);
+        this.outputLineNumbers.innerHTML = lines.map(index => 
+            `<div class="line-number">${index}</div>`
         ).join('');
     }
 
@@ -166,7 +168,7 @@ class JSONFormatter {
 
             // 格式化输出
             const formatted = JSON.stringify(parsed, null, 2);
-            this.outputArea.innerHTML = this.highlightJSON(formatted);
+            this.renderJSONTree(parsed);
             this.updateOutputLineNumbers();
             this.showNotification('JSON格式化成功', 'success');
             
@@ -347,6 +349,143 @@ class JSONFormatter {
             return true;
         } catch (e) {
             return false;
+        }
+    }
+
+    // 渲染JSON树形结构
+    renderJSONTree(data, path = '') {
+        this.outputArea.innerHTML = '';
+        this.outputArea.appendChild(this.createJSONNode(data, path));
+    }
+
+    // 创建JSON节点
+    createJSONNode(data, path = '') {
+        const node = document.createElement('div');
+        node.className = 'json-node';
+        
+        if (typeof data === 'object' && data !== null) {
+            const isArray = Array.isArray(data);
+            const toggle = document.createElement('span');
+            toggle.className = 'json-toggle expanded';
+            toggle.onclick = (e) => {
+                e.stopPropagation();
+                this.toggleNode(toggle, children);
+            };
+            
+            const keySpan = document.createElement('span');
+            keySpan.className = 'json-key';
+            keySpan.textContent = path ? `"${path}": ` : '';
+            
+            const bracket = document.createElement('span');
+            bracket.className = 'json-punctuation';
+            bracket.textContent = isArray ? '[' : '{';
+            
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'json-copy-btn';
+            copyBtn.textContent = '复制';
+            copyBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.copyNodeValue(data, path);
+            };
+            
+            node.appendChild(toggle);
+            node.appendChild(keySpan);
+            node.appendChild(bracket);
+            node.appendChild(copyBtn);
+            
+            const children = document.createElement('div');
+            children.className = 'json-children';
+            
+            if (isArray) {
+                data.forEach((item, index) => {
+                    const childNode = this.createJSONNode(item, index.toString());
+                    children.appendChild(childNode);
+                });
+            } else {
+                Object.keys(data).forEach(key => {
+                    const childNode = this.createJSONNode(data[key], key);
+                    children.appendChild(childNode);
+                });
+            }
+            
+            const closeBracket = document.createElement('span');
+            closeBracket.className = 'json-punctuation';
+            closeBracket.textContent = isArray ? ']' : '}';
+            
+            node.appendChild(children);
+            node.appendChild(closeBracket);
+            
+        } else {
+            const keySpan = document.createElement('span');
+            keySpan.className = 'json-key';
+            keySpan.textContent = path ? `"${path}": ` : '';
+            
+            const valueSpan = document.createElement('span');
+            if (typeof data === 'string') {
+                valueSpan.className = 'json-string';
+                valueSpan.textContent = `"${data}"`;
+            } else if (typeof data === 'number') {
+                valueSpan.className = 'json-number';
+                valueSpan.textContent = data.toString();
+            } else if (typeof data === 'boolean') {
+                valueSpan.className = 'json-boolean';
+                valueSpan.textContent = data.toString();
+            } else if (data === null) {
+                valueSpan.className = 'json-null';
+                valueSpan.textContent = 'null';
+            }
+            
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'json-copy-btn';
+            copyBtn.textContent = '复制';
+            copyBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.copyNodeValue(data, path);
+            };
+            
+            node.appendChild(keySpan);
+            node.appendChild(valueSpan);
+            node.appendChild(copyBtn);
+        }
+        
+        return node;
+    }
+
+    // 切换节点折叠状态
+    toggleNode(toggle, children) {
+        if (toggle.classList.contains('expanded')) {
+            toggle.classList.remove('expanded');
+            toggle.classList.add('collapsed');
+            children.classList.add('collapsed');
+        } else {
+            toggle.classList.remove('collapsed');
+            toggle.classList.add('expanded');
+            children.classList.remove('collapsed');
+        }
+    }
+
+    // 复制节点值
+    copyNodeValue(data, path) {
+        let valueToCopy;
+        if (path) {
+            valueToCopy = JSON.stringify(data, null, 2);
+        } else {
+            valueToCopy = JSON.stringify(data, null, 2);
+        }
+        
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(valueToCopy).then(() => {
+                this.showNotification('节点值已复制到剪贴板', 'success');
+            });
+        } else {
+            // 降级方案
+            const tempInput = document.createElement('textarea');
+            tempInput.value = valueToCopy;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            this.showNotification('节点值已复制到剪贴板', 'success');
         }
     }
 }
