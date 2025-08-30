@@ -77,7 +77,7 @@ class JSONFormatter {
 
     // 更新输入区域行号
     updateInputLineNumbers() {
-        const lines = this.inputArea.textContent.split('\n');
+        const lines = this.inputArea.value.split('\n');
         this.inputLineNumbers.innerHTML = lines.map((_, index) => 
             `<div class="line-number">${index + 1}</div>`
         ).join('');
@@ -151,7 +151,7 @@ class JSONFormatter {
     // 格式化JSON
     formatJSON() {
         try {
-            const input = this.inputArea.textContent.trim();
+            const input = this.inputArea.value.trim();
             if (!input) {
                 this.showNotification('请输入JSON数据', 'error');
                 return;
@@ -182,7 +182,7 @@ class JSONFormatter {
     // 压缩JSON
     compressJSON() {
         try {
-            const input = this.inputArea.textContent.trim();
+            const input = this.inputArea.value.trim();
             if (!input) {
                 this.showNotification('请输入JSON数据', 'error');
                 return;
@@ -196,7 +196,7 @@ class JSONFormatter {
             }
 
             const compressed = JSON.stringify(parsed);
-            this.outputArea.innerHTML = this.highlightJSON(compressed);
+            this.outputArea.innerHTML = `<pre>${this.highlightJSON(compressed)}</pre>`;
             this.updateOutputLineNumbers();
             this.showNotification('JSON压缩成功', 'success');
             
@@ -210,7 +210,7 @@ class JSONFormatter {
     // 去除转义
     unescapeJSON() {
         try {
-            const input = this.inputArea.textContent.trim();
+            const input = this.inputArea.value.trim();
             if (!input) {
                 this.showNotification('请输入JSON数据', 'error');
                 return;
@@ -246,7 +246,7 @@ class JSONFormatter {
     // 添加转义
     escapeJSON() {
         try {
-            const input = this.inputArea.textContent.trim();
+            const input = this.inputArea.value.trim();
             if (!input) {
                 this.showNotification('请输入JSON数据', 'error');
                 return;
@@ -298,7 +298,7 @@ class JSONFormatter {
 
     // 清空所有内容
     clearAll() {
-        this.inputArea.textContent = '';
+        this.inputArea.value = '';
         this.outputArea.innerHTML = '';
         this.updateLineNumbers();
         this.showNotification('内容已清空', 'success');
@@ -318,7 +318,7 @@ class JSONFormatter {
                 this.showNotification('内容已复制到剪贴板', 'success');
             } else {
                 // 降级方案
-                this.inputArea.textContent = output;
+                this.inputArea.value = output;
                 this.updateInputLineNumbers();
                 this.showNotification('内容已复制到剪贴板', 'success');
             }

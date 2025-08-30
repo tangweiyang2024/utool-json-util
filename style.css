@@ -183,6 +183,11 @@ body {
     background: rgba(102, 126, 234, 0.05);
 }
 
+.code-input::placeholder {
+    color: #adb5bd;
+    font-style: italic;
+}
+
 .code-output {
     background-color: #f8f9fa;
     color: #495057;
