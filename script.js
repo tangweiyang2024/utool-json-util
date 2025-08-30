@@ -19,7 +19,8 @@ class JSONFormatter {
         this.unescapeBtn = document.getElementById('unescapeBtn');
         this.escapeBtn = document.getElementById('escapeBtn');
         this.clearBtn = document.getElementById('clearBtn');
-        this.copyBtn = document.getElementById('copyBtn');
+        this.copyBtn = document.getElementById('copyBtn'); // 新增复制按钮
+
         this.resizer = document.getElementById('resizer');
     }
 
@@ -197,11 +198,13 @@ class JSONFormatter {
 
             const compressed = JSON.stringify(parsed);
             this.outputArea.innerHTML = `<pre>${this.highlightJSON(compressed)}</pre>`;
+            this.outputArea.className = 'output-area';
             this.updateOutputLineNumbers();
             this.showNotification('JSON压缩成功', 'success');
             
         } catch (error) {
             this.outputArea.innerHTML = `<span class="error">压缩失败: ${error.message}</span>`;
+            this.outputArea.className = 'output-area';
             this.updateOutputLineNumbers();
             this.showNotification('JSON压缩失败', 'error');
         }
@@ -233,11 +236,13 @@ class JSONFormatter {
             }
 
             this.outputArea.innerHTML = this.highlightJSON(unescaped);
+            this.outputArea.className = 'output-area';
             this.updateOutputLineNumbers();
             this.showNotification('转义去除成功', 'success');
             
         } catch (error) {
             this.outputArea.innerHTML = `<span class="error">处理失败: ${error.message}</span>`;
+            this.outputArea.className = 'output-area';
             this.updateOutputLineNumbers();
             this.showNotification('转义去除失败', 'error');
         }
@@ -261,12 +266,13 @@ class JSONFormatter {
                 .replace(/\r/g, '\\r');
 
             this.outputArea.innerHTML = this.highlightJSON(escaped);
+            this.outputArea.className = 'output-area';
             this.updateOutputLineNumbers();
             this.showNotification('转义添加成功', 'success');
             
         } catch (error) {
             this.outputArea.innerHTML = `<span class="error">处理失败: ${error.message}</span>`;
-            this.updateOutputLineNumbers();
+            this.outputArea.className = 'output-area';
             this.updateOutputLineNumbers();
             this.showNotification('转义添加失败', 'error');
         }
@@ -300,31 +306,9 @@ class JSONFormatter {
     clearAll() {
         this.inputArea.value = '';
         this.outputArea.innerHTML = '';
+        this.outputArea.className = 'output-area';
         this.updateLineNumbers();
         this.showNotification('内容已清空', 'success');
-    }
-
-    // 复制输出内容
-    async copyOutput() {
-        const output = this.outputArea.textContent || this.outputArea.innerText;
-        if (!output) {
-            this.showNotification('没有内容可复制', 'error');
-            return;
-        }
-
-        try {
-            if (navigator.clipboard && window.isSecureContext) {
-                await navigator.clipboard.writeText(output);
-                this.showNotification('内容已复制到剪贴板', 'success');
-            } else {
-                // 降级方案
-                this.inputArea.value = output;
-                this.updateInputLineNumbers();
-                this.showNotification('内容已复制到剪贴板', 'success');
-            }
-        } catch (error) {
-            this.showNotification('复制失败', 'error');
-        }
     }
 
     // JSON语法高亮
@@ -355,6 +339,7 @@ class JSONFormatter {
     // 渲染JSON树形结构
     renderJSONTree(data, path = '') {
         this.outputArea.innerHTML = '';
+        this.outputArea.className = 'output-area json-tree';
         this.outputArea.appendChild(this.createJSONNode(data, path));
     }
 
@@ -377,31 +362,51 @@ class JSONFormatter {
                 this.toggleNode(toggle, children);
             };
             
-            const keySpan = document.createElement('span');
-            keySpan.className = 'json-key';
-            keySpan.textContent = path ? `"${path}": ` : '';
+            // 显示键名（如果有的话）
+            if (path && !path.includes('[')) {
+                const keySpan = document.createElement('span');
+                keySpan.className = 'json-key';
+                keySpan.textContent = `"${path.split('.').pop()}": `;
+                header.appendChild(keySpan);
+            }
             
             const bracket = document.createElement('span');
             bracket.className = 'json-punctuation';
             bracket.textContent = isArray ? '[' : '{';
             
-            // 添加路径显示
+            // 添加路径显示（仅用于显示，不参与复制）
             const pathSpan = document.createElement('span');
             pathSpan.className = 'json-path';
             pathSpan.textContent = this.formatPath(path);
+            pathSpan.title = '点击复制路径';
+            pathSpan.onclick = (e) => {
+                e.stopPropagation();
+                this.copyPath(path);
+            };
+            
+            // 添加路径复制按钮
+            const pathCopyBtn = document.createElement('button');
+            pathCopyBtn.className = 'json-path-copy-btn';
+            pathCopyBtn.textContent = '📋';
+            pathCopyBtn.title = '复制路径';
+            pathCopyBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.copyPath(path);
+            };
             
             const copyBtn = document.createElement('button');
             copyBtn.className = 'json-copy-btn';
             copyBtn.textContent = '复制';
+            copyBtn.title = '复制JSON值';
             copyBtn.onclick = (e) => {
                 e.stopPropagation();
                 this.copyNodeValue(data, path);
             };
             
             header.appendChild(toggle);
-            header.appendChild(keySpan);
             header.appendChild(bracket);
             header.appendChild(pathSpan);
+            header.appendChild(pathCopyBtn);
             header.appendChild(copyBtn);
             node.appendChild(header);
             
@@ -434,9 +439,13 @@ class JSONFormatter {
             const header = document.createElement('div');
             header.className = 'json-node-header';
             
-            const keySpan = document.createElement('span');
-            keySpan.className = 'json-key';
-            keySpan.textContent = path ? `"${path}": ` : '';
+            // 显示键名（如果有的话）
+            if (path && !path.includes('[')) {
+                const keySpan = document.createElement('span');
+                keySpan.className = 'json-key';
+                keySpan.textContent = `"${path.split('.').pop()}": `;
+                header.appendChild(keySpan);
+            }
             
             const valueSpan = document.createElement('span');
             if (typeof data === 'string') {
@@ -453,22 +462,38 @@ class JSONFormatter {
                 valueSpan.textContent = 'null';
             }
             
-            // 添加路径显示
+            // 添加路径显示（仅用于显示，不参与复制）
             const pathSpan = document.createElement('span');
             pathSpan.className = 'json-path';
             pathSpan.textContent = this.formatPath(path);
+            pathSpan.title = '点击复制路径';
+            pathSpan.onclick = (e) => {
+                e.stopPropagation();
+                this.copyPath(path);
+            };
+            
+            // 添加路径复制按钮
+            const pathCopyBtn = document.createElement('button');
+            pathCopyBtn.className = 'json-path-copy-btn';
+            pathCopyBtn.textContent = '📋';
+            pathCopyBtn.title = '复制路径';
+            pathCopyBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.copyPath(path);
+            };
             
             const copyBtn = document.createElement('button');
             copyBtn.className = 'json-copy-btn';
             copyBtn.textContent = '复制';
+            copyBtn.title = '复制JSON值';
             copyBtn.onclick = (e) => {
                 e.stopPropagation();
                 this.copyNodeValue(data, path);
             };
             
-            header.appendChild(keySpan);
             header.appendChild(valueSpan);
             header.appendChild(pathSpan);
+            header.appendChild(pathCopyBtn);
             header.appendChild(copyBtn);
             node.appendChild(header);
         }
@@ -491,28 +516,139 @@ class JSONFormatter {
 
     // 复制节点值
     copyNodeValue(data, path) {
-        let valueToCopy;
-        if (path) {
-            valueToCopy = JSON.stringify(data, null, 2);
-        } else {
-            valueToCopy = JSON.stringify(data, null, 2);
-        }
+        // 只复制JSON数据本身，不包含路径信息
+        const valueToCopy = JSON.stringify(data, null, 2);
         
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(valueToCopy).then(() => {
-                this.showNotification('节点值已复制到剪贴板', 'success');
+                this.showNotification('JSON值已复制到剪贴板', 'success');
+            }).catch(() => {
+                // 如果clipboard API失败，使用降级方案
+                this.fallbackCopy(valueToCopy);
+            });
+        } else {
+            // 降级方案
+            this.fallbackCopy(valueToCopy);
+        }
+    }
+
+    // 降级复制方案
+    fallbackCopy(text) {
+        const tempInput = document.createElement('textarea');
+        tempInput.value = text;
+        tempInput.style.position = 'fixed';
+        tempInput.style.opacity = '0';
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        
+        try {
+            document.execCommand('copy');
+            this.showNotification('JSON值已复制到剪贴板', 'success');
+        } catch (err) {
+            this.showNotification('复制失败，请手动复制', 'error');
+        }
+        
+        document.body.removeChild(tempInput);
+    }
+
+    // 复制路径
+    copyPath(path) {
+        const pathToCopy = path || 'root';
+        
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(pathToCopy).then(() => {
+                this.showNotification('路径已复制到剪贴板', 'success');
             });
         } else {
             // 降级方案
             const tempInput = document.createElement('textarea');
-            tempInput.value = valueToCopy;
+            tempInput.value = pathToCopy;
             document.body.appendChild(tempInput);
             tempInput.select();
             document.execCommand('copy');
             document.body.removeChild(tempInput);
-            this.showNotification('节点值已复制到剪贴板', 'success');
+            this.showNotification('路径已复制到剪贴板', 'success');
         }
     }
+
+    // 复制输出区域内容
+    copyOutput() {
+        // 检查是否有JSON树形结构
+        if (this.outputArea.classList.contains('json-tree')) {
+            // 如果有JSON树，复制格式化后的JSON字符串
+            this.copyFormattedJSON();
+            return;
+        }
+        
+        // 检查是否有pre标签（压缩、转义等操作的结果）
+        const preElement = this.outputArea.querySelector('pre');
+        if (preElement) {
+            // 如果有pre标签，复制其中的文本内容
+            this.copyTextContent(preElement.textContent);
+            return;
+        }
+        
+        // 如果没有特殊结构，复制普通文本内容
+        const output = this.outputArea.textContent || this.outputArea.innerText;
+        if (!output) {
+            this.showNotification('没有内容可复制', 'error');
+            return;
+        }
+        
+        this.copyTextContent(output);
+    }
+
+    // 复制格式化后的JSON字符串
+    copyFormattedJSON() {
+        try {
+            // 从输入区域获取原始JSON数据并重新格式化
+            const input = this.inputArea.value.trim();
+            if (!input) {
+                this.showNotification('没有JSON数据可复制', 'error');
+                return;
+            }
+
+            // 解析JSON并格式化
+            let parsed;
+            try {
+                parsed = JSON.parse(input);
+            } catch (e) {
+                // 如果不是标准JSON，尝试处理非标准格式
+                parsed = this.parseNonStandardJSON(input);
+            }
+
+            // 格式化输出
+            const formatted = JSON.stringify(parsed, null, 2);
+            
+            // 复制到剪贴板
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(formatted).then(() => {
+                    this.showNotification('格式化后的JSON已复制到剪贴板', 'success');
+                }).catch(() => {
+                    this.fallbackCopy(formatted);
+                });
+            } else {
+                this.fallbackCopy(formatted);
+            }
+            
+        } catch (error) {
+            this.showNotification('JSON数据提取失败', 'error');
+        }
+    }
+
+    // 复制文本内容
+    copyTextContent(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => {
+                this.showNotification('内容已复制到剪贴板', 'success');
+            }).catch(() => {
+                this.fallbackCopy(text);
+            });
+        } else {
+            this.fallbackCopy(text);
+        }
+    }
+
 
     // 格式化路径显示
     formatPath(path) {

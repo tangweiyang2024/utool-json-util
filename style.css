@@ -440,12 +440,56 @@ body {
     border-radius: 3px;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     opacity: 0.8;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
 }
 
-.json-node:hover .json-path {
+.json-path:hover {
     opacity: 1;
     background: #e9ecef;
     border-color: #adb5bd;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.json-path:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.json-path::after {
+    content: '📋';
+    position: absolute;
+    right: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.json-path:hover::after {
+    opacity: 1;
+}
+
+.json-path-copy-btn {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 2px 4px;
+    font-size: 10px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.json-path-copy-btn:hover {
+    opacity: 1;
+    background: #495057;
 }
 
 .json-node-header {
